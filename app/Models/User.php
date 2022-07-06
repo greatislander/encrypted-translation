@@ -7,10 +7,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use ParagonIE\CipherSweet\EncryptedRow;
+use ParagonIE\CipherSweet\JsonFieldMap;
+use Spatie\LaravelCipherSweet\Contracts\CipherSweetEncrypted;
+use Spatie\LaravelCipherSweet\Concerns\UsesCipherSweet;
+use Spatie\Translatable\HasTranslations;
 
-class User extends Authenticatable
+class User extends Authenticatable implements CipherSweetEncrypted
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use UsesCipherSweet, HasApiTokens, HasFactory, HasTranslations, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -19,6 +24,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'bio',
         'email',
         'password',
     ];
@@ -39,6 +45,18 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
+        'bio' => 'array',
         'email_verified_at' => 'datetime',
     ];
+
+    public $translatable = ['bio'];
+
+    public static function configureCipherSweet(EncryptedRow $encryptedRow): void
+    {
+        $localeMap = (new JsonFieldMap())
+            ->addTextField('en')
+            ->addTextField('fr');
+
+        $encryptedRow->addJsonField('bio', $localeMap);
+    }
 }
